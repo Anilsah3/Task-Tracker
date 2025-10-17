@@ -1,0 +1,14 @@
+C:\Users\hp\Desktop\csharp\Task Tracker\bin\Debug\net9.0\Task Tracker.exe
+C:\Users\hp\Desktop\csharp\Task Tracker\bin\Debug\net9.0\Task Tracker.deps.json
+C:\Users\hp\Desktop\csharp\Task Tracker\bin\Debug\net9.0\Task Tracker.runtimeconfig.json
+C:\Users\hp\Desktop\csharp\Task Tracker\bin\Debug\net9.0\Task Tracker.dll
+C:\Users\hp\Desktop\csharp\Task Tracker\bin\Debug\net9.0\Task Tracker.pdb
+C:\Users\hp\Desktop\csharp\Task Tracker\obj\Debug\net9.0\Task Tracker.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\hp\Desktop\csharp\Task Tracker\obj\Debug\net9.0\Task Tracker.AssemblyInfoInputs.cache
+C:\Users\hp\Desktop\csharp\Task Tracker\obj\Debug\net9.0\Task Tracker.AssemblyInfo.cs
+C:\Users\hp\Desktop\csharp\Task Tracker\obj\Debug\net9.0\Task Tracker.csproj.CoreCompileInputs.cache
+C:\Users\hp\Desktop\csharp\Task Tracker\obj\Debug\net9.0\Task Tracker.dll
+C:\Users\hp\Desktop\csharp\Task Tracker\obj\Debug\net9.0\refint\Task Tracker.dll
+C:\Users\hp\Desktop\csharp\Task Tracker\obj\Debug\net9.0\Task Tracker.pdb
+C:\Users\hp\Desktop\csharp\Task Tracker\obj\Debug\net9.0\Task Tracker.genruntimeconfig.cache
+C:\Users\hp\Desktop\csharp\Task Tracker\obj\Debug\net9.0\ref\Task Tracker.dll
