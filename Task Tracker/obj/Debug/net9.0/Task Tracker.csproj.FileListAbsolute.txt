@@ -12,3 +12,4 @@ C:\Users\hp\Desktop\csharp\Task Tracker\obj\Debug\net9.0\refint\Task Tracker.dll
 C:\Users\hp\Desktop\csharp\Task Tracker\obj\Debug\net9.0\Task Tracker.pdb
 C:\Users\hp\Desktop\csharp\Task Tracker\obj\Debug\net9.0\Task Tracker.genruntimeconfig.cache
 C:\Users\hp\Desktop\csharp\Task Tracker\obj\Debug\net9.0\ref\Task Tracker.dll
+C:\Users\hp\Desktop\csharp\Task Tracker\obj\Debug\net9.0\Task Tracker.sourcelink.json

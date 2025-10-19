@@ -1,9 +1,9 @@
 ﻿// Program.cs
 using Task_Tracker.Presentation;
+using Task_Tracker.Application;
 
-// Placeholder instances so the menu compiles/runs before you build the real services.
-var dummyManager = new object();
-var dummyReports = new object();
+var manager = new TaskManager();      // real manager
+var dummyReports = new object();      // placeholder for now
 
-var menu = new ConsoleMenu(dummyManager, dummyReports);
+var menu = new ConsoleMenu(manager, dummyReports);
 menu.Run();
