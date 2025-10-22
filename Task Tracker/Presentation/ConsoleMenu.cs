@@ -3,19 +3,18 @@
 using System;
 using Task_Tracker.Application;
 using Task_Tracker.Task;
-
+using DomainTaskStatus = Task_Tracker.Task.TaskStatus; // avoid ambiguity with System.Threading.Tasks.TaskStatus
 
 namespace Task_Tracker.Presentation
 {
     // Console menu for the Task Tracker application
     public class ConsoleMenu
     {
-        private readonly TaskManager _manager;  // TODO: replace with TaskManager
-        private readonly object _reports; // TODO: replace with ReportService
+        private readonly TaskManager _manager;   // real manager now
+        private readonly object _reports;        // placeholder for later
         private bool _running = true;
 
         public ConsoleMenu(TaskManager manager, object reports)
-
         {
             _manager = manager;
             _reports = reports;
@@ -98,60 +97,78 @@ namespace Task_Tracker.Presentation
 
         private void SaveAndExit()
         {
-            // In the future you can trigger a repo SaveChanges here if needed.
             Console.WriteLine("Goodbye!");
             _running = false;
         }
 
-        // ---------- Placeholder flows (implement later) ----------
+        // ---------- Flows ----------
 
-      private void AddTaskFlow()
-{
-    Console.Write("Title: ");
-    var title = Console.ReadLine() ?? string.Empty;
-    if (string.IsNullOrWhiteSpace(title))
-    {
-        Console.WriteLine("Title is required.");
-        return;
-    }
+        private void AddTaskFlow()
+        {
+            Console.Write("Title: ");
+            var title = Console.ReadLine() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                Console.WriteLine("Title is required.");
+                return;
+            }
 
-    Console.Write("Description (optional): ");
-    var desc = Console.ReadLine();
+            Console.Write("Description (optional): ");
+            var desc = Console.ReadLine();
 
-    Console.Write("Due date (yyyy-MM-dd): ");
-    var dueRaw = Console.ReadLine();
-    if (!DateTime.TryParse(dueRaw, out var due))
-    {
-        Console.WriteLine("Invalid date. Use format yyyy-MM-dd.");
-        return;
-    }
+            Console.Write("Due date (yyyy-MM-dd): ");
+            var dueRaw = Console.ReadLine();
+            if (!DateTime.TryParse(dueRaw, out var due))
+            {
+                Console.WriteLine("Invalid date. Use format yyyy-MM-dd.");
+                return;
+            }
 
-    Console.Write("Priority (Low, Medium, High, Critical): ");
-    var prRaw = Console.ReadLine();
-    if (!Enum.TryParse<Priority>(prRaw, true, out var prio))
-    {
-        Console.WriteLine("Invalid priority. Defaulting to Medium.");
-        prio = Priority.Medium;
-    }
+            Console.Write("Priority (Low, Medium, High, Critical): ");
+            var prRaw = Console.ReadLine();
+            if (!Enum.TryParse<Priority>(prRaw, true, out var prio))
+            {
+                Console.WriteLine("Invalid priority. Defaulting to Medium.");
+                prio = Priority.Medium;
+            }
 
-    Console.Write("Assignee (optional): ");
-    var asg = Console.ReadLine();
+            Console.Write("Assignee (optional): ");
+            var asg = Console.ReadLine();
 
-    try
-    {
-        var task = _manager.CreateTask(title, desc, due, prio, asg);
-        Console.WriteLine($"✅ Task created. ID: {task.Id}");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Failed to create task: {ex.Message}");
-    }
-}
-
+            try
+            {
+                var task = _manager.CreateTask(title, desc, due, prio, asg);
+                Console.WriteLine($"✅ Task created. ID: {task.Id}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to create task: {ex.Message}");
+            }
+        }
 
         private void UpdateStatusFlow()
         {
-            Console.WriteLine("(Update Task Status) — feature coming soon.");
+            Console.Write("Task ID: ");
+            var idRaw = Console.ReadLine();
+
+            if (!Guid.TryParse(idRaw, out var id))
+            {
+                Console.WriteLine("That doesn’t look like a valid ID.");
+                return;
+            }
+
+            Console.Write("New status (Todo, InProgress, Done, Archived): ");
+            var statusRaw = Console.ReadLine();
+
+            // Use the alias 'DomainTaskStatus' to avoid any ambiguity
+            if (!Enum.TryParse<DomainTaskStatus>(statusRaw, true, out var newStatus))
+            {
+                Console.WriteLine("Unknown status. Try: Todo, InProgress, Done, or Archived.");
+                return;
+            }
+
+            var ok = _manager.UpdateStatus(id, newStatus);
+            Console.WriteLine(ok ? "Status updated." : "No task found with that ID.");
         }
 
         private void SearchTasksFlow()
