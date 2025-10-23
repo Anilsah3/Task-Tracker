@@ -1,16 +1,17 @@
 // Presentation/ConsoleMenu.cs
 #nullable enable
 using System;
+using System.Collections.Generic;
 using Task_Tracker.Application;
 using Task_Tracker.Task;
-using DomainTaskStatus = Task_Tracker.Task.TaskStatus; // avoid ambiguity with System.Threading.Tasks.TaskStatus
+using DomainTaskStatus = Task_Tracker.Task.TaskStatus; // avoid clash with System.Threading.Tasks.TaskStatus
 
 namespace Task_Tracker.Presentation
 {
     // Console menu for the Task Tracker application
     public class ConsoleMenu
     {
-        private readonly TaskManager _manager;   // real manager now
+        private readonly TaskManager _manager;   // main logic
         private readonly object _reports;        // placeholder for later
         private bool _running = true;
 
@@ -75,6 +76,8 @@ namespace Task_Tracker.Presentation
             }
         }
 
+        // ===== UI Helpers =====
+
         private static void ShowMain()
         {
             Console.WriteLine("=== Task Tracker ===");
@@ -101,7 +104,7 @@ namespace Task_Tracker.Presentation
             _running = false;
         }
 
-        // ---------- Flows ----------
+        // ===== Flows =====
 
         private void AddTaskFlow()
         {
@@ -160,7 +163,7 @@ namespace Task_Tracker.Presentation
             Console.Write("New status (Todo, InProgress, Done, Archived): ");
             var statusRaw = Console.ReadLine();
 
-            // Use the alias 'DomainTaskStatus' to avoid any ambiguity
+            // Use the alias 'DomainTaskStatus' to avoid ambiguity with System.Threading.Tasks.TaskStatus
             if (!Enum.TryParse<DomainTaskStatus>(statusRaw, true, out var newStatus))
             {
                 Console.WriteLine("Unknown status. Try: Todo, InProgress, Done, or Archived.");
@@ -171,11 +174,62 @@ namespace Task_Tracker.Presentation
             Console.WriteLine(ok ? "Status updated." : "No task found with that ID.");
         }
 
+        // Friendlier search: paste an ID or type any text; it auto-detects
         private void SearchTasksFlow()
         {
-            Console.WriteLine("(Search Tasks) — feature coming soon.");
+            Console.Write("Enter a Task ID (GUID) or part of the Title: ");
+            var input = (Console.ReadLine() ?? "").Trim();
+
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                Console.WriteLine("Please type something to search.");
+                return;
+            }
+
+            // If it parses as a GUID, search by ID
+            if (Guid.TryParse(input, out var id))
+            {
+                var hit = _manager.FindById(id);
+                if (hit is null)
+                {
+                    Console.WriteLine("No task found with that ID.");
+                    return;
+                }
+
+                PrintTasks(new[] { hit });
+                return;
+            }
+
+            // Otherwise do a title search (case-insensitive)
+            var matches = _manager.SearchByTitle(input);
+            if (matches.Count == 0)
+            {
+                Console.WriteLine("No tasks matched.");
+                return;
+            }
+
+            PrintTasks(matches);
         }
 
+        private static void PrintTasks(IEnumerable<TaskItem> items)
+        {
+            Console.WriteLine();
+            Console.WriteLine("Id                                   | Title                | Due        | Priority | Status      | Assignee");
+            Console.WriteLine(new string('-', 100));
+
+            foreach (var t in items)
+            {
+                var title = (t.Title ?? "").PadRight(20);
+                if (title.Length > 20) title = title[..20];
+
+                var due = t.DueDate.ToString("yyyy-MM-dd");
+                var assignee = string.IsNullOrWhiteSpace(t.Assignee) ? "-" : t.Assignee!;
+
+                Console.WriteLine($"{t.Id} | {title} | {due} | {t.Priority,-8} | {t.Status,-10} | {assignee}");
+            }
+        }
+
+        // Placeholders for upcoming features
         private void ListSortedFlow()
         {
             Console.WriteLine("(List Sorted by due/priority) — feature coming soon.");

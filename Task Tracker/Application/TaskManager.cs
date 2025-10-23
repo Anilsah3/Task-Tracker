@@ -1,16 +1,19 @@
 // Application/TaskManager.cs
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Task_Tracker.Task;
-using TaskStatus = Task_Tracker.Task.TaskStatus;
+using TaskStatus = Task_Tracker.Task.TaskStatus;  // alias to avoid clashing with System.Threading.Tasks.TaskStatus
 
 namespace Task_Tracker.Application
 {
     /// <summary>
     /// Simple in-memory task manager.
-    /// You can swap this to a file/database later without changing the menu code.
+    /// You can swap this to a file or database later without changing callers.
     /// </summary>
     public class TaskManager
     {
-        // For now we keep tasks in a list.
+        // We keep tasks in memory for now.
         private readonly List<TaskItem> _tasks = new();
 
         /// <summary>
@@ -52,7 +55,7 @@ namespace Task_Tracker.Application
             var task = FindById(id);
             if (task is null) return false;
 
-            // Nothing to change
+            // Already in this state
             if (task.Status == newStatus) return true;
 
             task.Status = newStatus;
@@ -60,7 +63,24 @@ namespace Task_Tracker.Application
         }
 
         /// <summary>
-        /// Read-only view of all tasks (useful for listing/searching).
+        /// Find tasks where the Title contains the given text (case-insensitive).
+        /// Results are ordered by due date.
+        /// </summary>
+        public List<TaskItem> SearchByTitle(string term)
+        {
+            if (string.IsNullOrWhiteSpace(term))
+                return new List<TaskItem>();
+
+            term = term.Trim().ToLowerInvariant();
+
+            return _tasks
+                .Where(t => (t.Title ?? string.Empty).ToLowerInvariant().Contains(term))
+                .OrderBy(t => t.DueDate)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Read-only snapshot of all tasks (useful for listing/searching).
         /// </summary>
         public IReadOnlyList<TaskItem> All() => _tasks.AsReadOnly();
     }
