@@ -11,8 +11,8 @@ namespace Task_Tracker.Presentation
     // Console menu for the Task Tracker application
     public class ConsoleMenu
     {
-        private readonly TaskManager _manager;   // main logic
-        private readonly object _reports;        // placeholder for later
+        private readonly TaskManager _manager;   // main logic layer
+        private readonly object _reports;        // placeholder for future reporting
         private bool _running = true;
 
         public ConsoleMenu(TaskManager manager, object reports)
@@ -163,7 +163,7 @@ namespace Task_Tracker.Presentation
             Console.Write("New status (Todo, InProgress, Done, Archived): ");
             var statusRaw = Console.ReadLine();
 
-            // Use the alias 'DomainTaskStatus' to avoid ambiguity with System.Threading.Tasks.TaskStatus
+            // Use the alias 'DomainTaskStatus' so we don't confuse our enum with System.Threading.Tasks.TaskStatus
             if (!Enum.TryParse<DomainTaskStatus>(statusRaw, true, out var newStatus))
             {
                 Console.WriteLine("Unknown status. Try: Todo, InProgress, Done, or Archived.");
@@ -174,7 +174,7 @@ namespace Task_Tracker.Presentation
             Console.WriteLine(ok ? "Status updated." : "No task found with that ID.");
         }
 
-        // Friendlier search: paste an ID or type any text; it auto-detects
+        // Friendlier search: user can paste a GUID or just type a word from the title
         private void SearchTasksFlow()
         {
             Console.Write("Enter a Task ID (GUID) or part of the Title: ");
@@ -200,7 +200,7 @@ namespace Task_Tracker.Presentation
                 return;
             }
 
-            // Otherwise do a title search (case-insensitive)
+            // Otherwise search by title (case-insensitive)
             var matches = _manager.SearchByTitle(input);
             if (matches.Count == 0)
             {
@@ -209,6 +209,47 @@ namespace Task_Tracker.Presentation
             }
 
             PrintTasks(matches);
+        }
+
+        // ← THIS IS THE NEW PART YOU ASKED FOR
+        private void ListSortedFlow()
+        {
+            Console.Write("Sort by (due | priority): ");
+            var sortKey = (Console.ReadLine() ?? "").Trim().ToLowerInvariant();
+
+            Console.Write("Direction (asc | desc): ");
+            var dir = (Console.ReadLine() ?? "asc").Trim().ToLowerInvariant();
+            bool ascending = dir != "desc";
+
+            if (sortKey == "due")
+            {
+                // For due date, we deliberately use our manual insertion sort
+                var sorted = _manager.SortByDueDateManual(ascending);
+
+                PrintTasks(sorted);
+
+                Console.WriteLine();
+                Console.WriteLine(ascending
+                    ? "(Sorted by due date ascending using custom insertion sort)"
+                    : "(Sorted by due date descending using custom insertion sort)");
+                return;
+            }
+
+            if (sortKey == "priority")
+            {
+                // For priority, we use a normal built-in order (High/Critical first, etc.)
+                var sorted = _manager.SortByPriority(ascending);
+
+                PrintTasks(sorted);
+
+                Console.WriteLine();
+                Console.WriteLine(ascending
+                    ? "(Sorted by priority ascending using built-in ordering)"
+                    : "(Sorted by priority descending using built-in ordering)");
+                return;
+            }
+
+            Console.WriteLine("I didn't understand that. Try 'due' or 'priority'.");
         }
 
         private static void PrintTasks(IEnumerable<TaskItem> items)
@@ -229,12 +270,7 @@ namespace Task_Tracker.Presentation
             }
         }
 
-        // Placeholders for upcoming features
-        private void ListSortedFlow()
-        {
-            Console.WriteLine("(List Sorted by due/priority) — feature coming soon.");
-        }
-
+        // These two are still placeholders. We'll wire them next.
         private void ShowOverdueFlow()
         {
             Console.WriteLine("(Show Overdue) — feature coming soon.");

@@ -9,11 +9,12 @@ namespace Task_Tracker.Application
 {
     /// <summary>
     /// Simple in-memory task manager.
-    /// You can swap this to a file or database later without changing callers.
+    /// Right now this just stores tasks in a List.
+    /// You can later move this to file or DB without changing the menu calls.
     /// </summary>
     public class TaskManager
     {
-        // We keep tasks in memory for now.
+        // We keep all tasks in memory for now.
         private readonly List<TaskItem> _tasks = new();
 
         /// <summary>
@@ -39,7 +40,7 @@ namespace Task_Tracker.Application
         }
 
         /// <summary>
-        /// Find a task by its Id. Returns null if not found.
+        /// Return a task with the given Id, or null if it doesn't exist.
         /// </summary>
         public TaskItem? FindById(Guid id)
         {
@@ -47,24 +48,24 @@ namespace Task_Tracker.Application
         }
 
         /// <summary>
-        /// Update only the status of a task.
-        /// Returns true if the task existed and was updated; false if not found.
+        /// Change only the Status of a task. Returns true on success, false if not found.
         /// </summary>
         public bool UpdateStatus(Guid id, TaskStatus newStatus)
         {
             var task = FindById(id);
             if (task is null) return false;
 
-            // Already in this state
-            if (task.Status == newStatus) return true;
+            if (task.Status == newStatus)
+                return true; // nothing to change
 
             task.Status = newStatus;
             return true;
         }
 
         /// <summary>
-        /// Find tasks where the Title contains the given text (case-insensitive).
-        /// Results are ordered by due date.
+        /// Case-insensitive title search.
+        /// Returns all tasks whose Title contains the given text.
+        /// Sorted by earliest due first.
         /// </summary>
         public List<TaskItem> SearchByTitle(string term)
         {
@@ -80,7 +81,61 @@ namespace Task_Tracker.Application
         }
 
         /// <summary>
-        /// Read-only snapshot of all tasks (useful for listing/searching).
+        /// Sort tasks by due date using a manual insertion sort.
+        /// This is your explicit DSA algorithm implementation.
+        /// </summary>
+        public List<TaskItem> SortByDueDateManual(bool ascending = true)
+        {
+            // Work on a copy so we don't mutate the original list
+            var list = _tasks.ToList();
+
+            // Insertion sort: walk forward, and insert each item into the "sorted" left side
+            for (int i = 1; i < list.Count; i++)
+            {
+                var current = list[i];
+                int j = i - 1;
+
+                // Shift bigger (or smaller, depending on asc/desc) items to the right
+                while (j >= 0 && CompareDue(list[j], current, ascending) > 0)
+                {
+                    list[j + 1] = list[j];
+                    j--;
+                }
+
+                // Drop the current item into the opening we just created
+                list[j + 1] = current;
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Helper to compare two tasks' due dates in the chosen direction.
+        /// Returns:
+        ///   >0 if 'a' should come AFTER 'b'
+        ///    0 if equal
+        ///   <0 if 'a' should come BEFORE 'b'
+        /// </summary>
+        private static int CompareDue(TaskItem a, TaskItem b, bool ascending)
+        {
+            int cmp = DateTime.Compare(a.DueDate, b.DueDate);
+            return ascending ? cmp : -cmp;
+        }
+
+        /// <summary>
+        /// Sort by priority.
+        /// By default we show highest priority first (Critical > High > Medium > Low).
+        /// This one uses LINQ since the assignment only requires at least one manual algorithm.
+        /// </summary>
+        public List<TaskItem> SortByPriority(bool ascending = false)
+        {
+            return ascending
+                ? _tasks.OrderBy(t => t.Priority).ToList()
+                : _tasks.OrderByDescending(t => t.Priority).ToList();
+        }
+
+        /// <summary>
+        /// Simple read-only snapshot of all tasks. Useful if you want to dump everything.
         /// </summary>
         public IReadOnlyList<TaskItem> All() => _tasks.AsReadOnly();
     }
