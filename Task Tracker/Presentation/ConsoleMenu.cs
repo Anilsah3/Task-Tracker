@@ -116,7 +116,7 @@ namespace Task_Tracker.Presentation
                 return;
             }
 
-            Console.Write("Description (optional): ");
+            Console.Write("Description: ");
             var desc = Console.ReadLine();
 
             Console.Write("Due date (yyyy-MM-dd): ");
@@ -135,7 +135,7 @@ namespace Task_Tracker.Presentation
                 prio = Priority.Medium;
             }
 
-            Console.Write("Assignee (optional): ");
+            Console.Write("Assignee: ");
             var asg = Console.ReadLine();
 
             try
@@ -211,7 +211,6 @@ namespace Task_Tracker.Presentation
             PrintTasks(matches);
         }
 
-        // ← THIS IS THE NEW PART YOU ASKED FOR
         private void ListSortedFlow()
         {
             Console.Write("Sort by (due | priority): ");
@@ -252,6 +251,49 @@ namespace Task_Tracker.Presentation
             Console.WriteLine("I didn't understand that. Try 'due' or 'priority'.");
         }
 
+        // ====== NEW: 5) Show Overdue ======
+        private void ShowOverdueFlow()
+        {
+            var today = DateTime.Now;
+            var overdue = _manager.GetOverdue(today);
+
+            if (overdue.Count == 0)
+            {
+                Console.WriteLine("No overdue tasks ✅");
+                return;
+            }
+
+            Console.WriteLine("Overdue tasks:");
+            PrintTasks(overdue);
+        }
+
+        // ====== NEW: 6) Export Overdue CSV ======
+      private void ExportOverdueCsvFlow()
+{
+    Console.Write("Enter file path (leave empty for ./overdue.csv in project folder): ");
+    var path = Console.ReadLine();
+
+    if (string.IsNullOrWhiteSpace(path))
+    {
+        // this points to the folder where you ran `dotnet run` (your project root)
+        path = System.IO.Path.Combine(Environment.CurrentDirectory, "overdue.csv");
+    }
+
+    var today = DateTime.Now;
+
+    try
+    {
+        _manager.ExportOverdueToCsv(path, today);
+        Console.WriteLine($"Overdue tasks exported to: {path}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Could not export overdue tasks: {ex.Message}");
+    }
+}
+
+
+        // shared printer
         private static void PrintTasks(IEnumerable<TaskItem> items)
         {
             Console.WriteLine();
@@ -268,17 +310,6 @@ namespace Task_Tracker.Presentation
 
                 Console.WriteLine($"{t.Id} | {title} | {due} | {t.Priority,-8} | {t.Status,-10} | {assignee}");
             }
-        }
-
-        // These two are still placeholders. We'll wire them next.
-        private void ShowOverdueFlow()
-        {
-            Console.WriteLine("(Show Overdue) — feature coming soon.");
-        }
-
-        private void ExportOverdueCsvFlow()
-        {
-            Console.WriteLine("(Export Overdue CSV) — feature coming soon.");
         }
     }
 }
