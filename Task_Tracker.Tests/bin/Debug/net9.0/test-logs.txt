@@ -1,0 +1,63 @@
+2025-10-31 16:01:26 [INFO] Created task 9ad91649-fae4-4fb8-b4d6-6e1648fd5f23 (Old)
+2025-10-31 16:01:26 [INFO] Created task faa413b6-0019-4106-9812-82e925eb5b10 (Future)
+2025-10-31 16:01:26 [INFO] Created task c4691924-c58b-45ef-9d81-80906db895bb (Old but done)
+2025-10-31 16:01:26 [INFO] Updated task c4691924-c58b-45ef-9d81-80906db895bb to Done
+2025-10-31 16:01:26 [INFO] Fetched 1 overdue task(s).
+2025-10-31 16:01:26 [INFO] Created task 51f02864-9c45-4d8d-b75b-819a1370fe93 (t1)
+2025-10-31 16:01:26 [INFO] Created task ab1c5fee-af80-4ac6-93c0-ba044654137c (t2)
+2025-10-31 16:01:26 [INFO] Created task 13e49eaa-92a9-4d40-bae4-47306b2af38c (t3)
+2025-10-31 16:01:26 [INFO] Sorted by due date using insertion sort.
+2025-10-31 16:01:26 [INFO] Created task 91b667ae-a474-4663-9a52-9d8910b61fca (Fix login)
+2025-10-31 16:01:26 [INFO] Created task 1196a213-e5e4-4d34-a87b-3c757eeb3372 (Write report)
+2025-10-31 16:01:26 [INFO] Created task 587476e2-cc4b-4513-b0e8-6389951b9cdb (Fix UI)
+2025-10-31 16:01:26 [INFO] Search 'fix' -> 2 result(s).
+2025-10-31 16:01:26 [INFO] Created task 513579fd-4509-43b2-97cd-377ab431c5aa (Old open)
+2025-10-31 16:01:26 [INFO] Created task 5037c8fd-db53-488b-93a6-6c9f9d7286ca (Old done)
+2025-10-31 16:01:26 [INFO] Updated task 5037c8fd-db53-488b-93a6-6c9f9d7286ca to Done
+2025-10-31 16:01:26 [INFO] Fetched 1 overdue task(s).
+2025-10-31 16:01:26 [INFO] Data file 'test-tasks.json' not found. Starting with empty list.
+2025-10-31 16:01:26 [INFO] Created task 0286f70e-0ff7-44fc-a0fa-3b31be7bfd5e (Do work)
+2025-10-31 16:01:26 [INFO] Created task 4cf0cd58-614c-4314-a2fc-1670c1200dc7 (Do work)
+2025-10-31 16:01:26 [INFO] Updated task 4cf0cd58-614c-4314-a2fc-1670c1200dc7 to Done
+2025-10-31 16:30:10 [INFO] Created task a2ee0739-0dbb-4bb4-ad77-97edddf74733 (Old)
+2025-10-31 16:30:10 [INFO] Created task 053ff7ec-c68a-43f3-9523-361f0c8ca00d (Future)
+2025-10-31 16:30:10 [INFO] Created task a2ccfbc6-c8ce-4ef6-bba1-ece31981ee77 (Old but done)
+2025-10-31 16:30:10 [INFO] Updated task a2ccfbc6-c8ce-4ef6-bba1-ece31981ee77 to Done
+2025-10-31 16:30:10 [INFO] Fetched 2 overdue task(s).
+2025-10-31 16:30:10 [INFO] Created task 8a76fbb2-eda7-440e-b991-edd114aede2f (t1)
+2025-10-31 16:30:10 [INFO] Created task 2f381b2a-4235-433b-bb13-9dd513b2b4ac (t2)
+2025-10-31 16:30:10 [INFO] Created task 8307b65b-bb69-4b94-9441-f3c779d24652 (t3)
+2025-10-31 16:30:10 [INFO] Sorted by due date using insertion sort.
+2025-10-31 16:30:10 [INFO] Created task 96b3f305-3255-4e4f-a225-75b3efc5a7a2 (Fix login)
+2025-10-31 16:30:10 [INFO] Created task 7acf5d14-5749-4124-b7cc-9f87d6a93a7e (Write report)
+2025-10-31 16:30:10 [INFO] Created task 01b0db01-ae0e-4a22-93e8-2b9c9fe802ad (Fix UI)
+2025-10-31 16:30:10 [INFO] Search 'fix' -> 0 result(s).
+2025-10-31 16:30:10 [INFO] Created task 9008f85b-78e2-40f6-a873-5ddf67b6130a (Old open)
+2025-10-31 16:30:10 [INFO] Created task 2ff9eade-ba43-469c-9224-7ada9a879b5a (Old done)
+2025-10-31 16:30:10 [INFO] Updated task 2ff9eade-ba43-469c-9224-7ada9a879b5a to Done
+2025-10-31 16:30:10 [INFO] Fetched 2 overdue task(s).
+2025-10-31 16:30:10 [INFO] Data file 'test-tasks.json' not found. Starting with empty list.
+2025-10-31 16:30:10 [INFO] Created task a7c45c15-6643-4cc8-8ce9-32da4b300024 (Do work)
+2025-10-31 16:30:10 [INFO] Created task d9dd8100-a6e3-40be-9fad-28466e3b654a (Do work)
+2025-10-31 16:30:10 [INFO] Updated task d9dd8100-a6e3-40be-9fad-28466e3b654a to Done
+2025-10-31 16:36:17 [INFO] Created task 1b4d90d2-220c-47d0-85ec-17fca78e6546 (Old)
+2025-10-31 16:36:17 [INFO] Created task 86f1e7ba-085f-4816-9878-09472aaf2fd6 (Future)
+2025-10-31 16:36:17 [INFO] Created task 43900c30-34f5-428e-abcf-ada99efd61a5 (Old but done)
+2025-10-31 16:36:17 [INFO] Updated task 43900c30-34f5-428e-abcf-ada99efd61a5 to Done
+2025-10-31 16:36:17 [INFO] Fetched 1 overdue task(s).
+2025-10-31 16:36:17 [INFO] Created task 1a17643d-d555-48f3-a861-6f83b2c34c98 (t1)
+2025-10-31 16:36:17 [INFO] Created task 31e758f6-0a55-440e-a3d4-d496402664f5 (t2)
+2025-10-31 16:36:17 [INFO] Created task 1e8401e5-3bd7-4b83-9c6d-dfbcfd0c09e4 (t3)
+2025-10-31 16:36:17 [INFO] Sorted by due date using insertion sort.
+2025-10-31 16:36:17 [INFO] Created task 75727e3e-1983-45f1-90a3-211a395870da (Fix login)
+2025-10-31 16:36:17 [INFO] Created task 2e6d54c1-9f7d-407b-984f-8f93e5a9307c (Write report)
+2025-10-31 16:36:17 [INFO] Created task 03e3b71c-2c1d-4d61-ab70-f13bccbc7ccc (Fix UI)
+2025-10-31 16:36:17 [INFO] Search 'fix' -> 2 result(s).
+2025-10-31 16:36:17 [INFO] Created task 31471831-7361-4cad-b1aa-0a0011067ec5 (Old open)
+2025-10-31 16:36:17 [INFO] Created task 20d329f1-d5c8-4575-a9af-ae34cf66a9e8 (Old done)
+2025-10-31 16:36:17 [INFO] Updated task 20d329f1-d5c8-4575-a9af-ae34cf66a9e8 to Done
+2025-10-31 16:36:17 [INFO] Fetched 1 overdue task(s).
+2025-10-31 16:36:17 [INFO] Data file 'test-tasks.json' not found. Starting with empty list.
+2025-10-31 16:36:17 [INFO] Created task e0c6511a-7179-4bc0-a033-b7c792570e54 (Do work)
+2025-10-31 16:36:17 [INFO] Created task 5690970c-132a-4506-bcda-3f1b60fac2f6 (Do work)
+2025-10-31 16:36:17 [INFO] Updated task 5690970c-132a-4506-bcda-3f1b60fac2f6 to Done
