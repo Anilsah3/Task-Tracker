@@ -1,9 +1,21 @@
-﻿// Program.cs
-using Task_Tracker.Presentation;
+﻿
 using Task_Tracker.Application;
+using Task_Tracker.Presentation;
 
-var manager = new TaskManager();      // real manager
-var dummyReports = new object();      // placeholder for now
+namespace Task_Tracker
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            var logger = new Logger("logs.txt");
+            var manager = new TaskManager(logger, "tasks.json");
 
-var menu = new ConsoleMenu(manager, dummyReports);
-menu.Run();
+            //  load saved tasks (if file exists)
+            manager.LoadFromJson();
+
+            var menu = new ConsoleMenu(manager, new object());
+            menu.Run();
+        }
+    }
+}

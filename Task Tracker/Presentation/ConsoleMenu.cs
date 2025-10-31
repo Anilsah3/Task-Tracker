@@ -1,18 +1,17 @@
-// Presentation/ConsoleMenu.cs
+
 #nullable enable
 using System;
 using System.Collections.Generic;
 using Task_Tracker.Application;
 using Task_Tracker.Task;
-using DomainTaskStatus = Task_Tracker.Task.TaskStatus; // avoid clash with System.Threading.Tasks.TaskStatus
+using DomainTaskStatus = Task_Tracker.Task.TaskStatus;
 
 namespace Task_Tracker.Presentation
 {
-    // Console menu for the Task Tracker application
     public class ConsoleMenu
     {
-        private readonly TaskManager _manager;   // main logic layer
-        private readonly object _reports;        // placeholder for future reporting
+        private readonly TaskManager _manager;
+        private readonly object _reports;
         private bool _running = true;
 
         public ConsoleMenu(TaskManager manager, object reports)
@@ -34,37 +33,14 @@ namespace Task_Tracker.Presentation
                 {
                     switch (choice)
                     {
-                        case "1":
-                            AddTaskFlow();
-                            break;
-
-                        case "2":
-                            UpdateStatusFlow();
-                            break;
-
-                        case "3":
-                            SearchTasksFlow();
-                            break;
-
-                        case "4":
-                            ListSortedFlow();
-                            break;
-
-                        case "5":
-                            ShowOverdueFlow();
-                            break;
-
-                        case "6":
-                            ExportOverdueCsvFlow();
-                            break;
-
-                        case "0":
-                            SaveAndExit();
-                            continue;
-
-                        default:
-                            Console.WriteLine("Invalid option. Please try again.");
-                            break;
+                        case "1": AddTaskFlow(); break;
+                        case "2": UpdateStatusFlow(); break;
+                        case "3": SearchTasksFlow(); break;
+                        case "4": ListSortedFlow(); break;
+                        case "5": ShowOverdueFlow(); break;
+                        case "6": ExportOverdueCsvFlow(); break;
+                        case "0": SaveAndExit(); continue;
+                        default:  Console.WriteLine("Invalid option. Please try again."); break;
                     }
                 }
                 catch (Exception ex)
@@ -75,8 +51,6 @@ namespace Task_Tracker.Presentation
                 Pause();
             }
         }
-
-        // ===== UI Helpers =====
 
         private static void ShowMain()
         {
@@ -97,14 +71,14 @@ namespace Task_Tracker.Presentation
             Console.Write("Press Enter to continue...");
             Console.ReadLine();
         }
-
-        private void SaveAndExit()
+  private void SaveAndExit()
         {
-            Console.WriteLine("Goodbye!");
+            //  save tasks to JSON before exiting
+            _manager.SaveToJson();
+            Console.WriteLine("Data saved. Goodbye!");
             _running = false;
         }
-
-        // ===== Flows =====
+        // Functionality of the add, update,search
 
         private void AddTaskFlow()
         {
@@ -163,7 +137,6 @@ namespace Task_Tracker.Presentation
             Console.Write("New status (Todo, InProgress, Done, Archived): ");
             var statusRaw = Console.ReadLine();
 
-            // Use the alias 'DomainTaskStatus' so we don't confuse our enum with System.Threading.Tasks.TaskStatus
             if (!Enum.TryParse<DomainTaskStatus>(statusRaw, true, out var newStatus))
             {
                 Console.WriteLine("Unknown status. Try: Todo, InProgress, Done, or Archived.");
@@ -174,7 +147,6 @@ namespace Task_Tracker.Presentation
             Console.WriteLine(ok ? "Status updated." : "No task found with that ID.");
         }
 
-        // Friendlier search: user can paste a GUID or just type a word from the title
         private void SearchTasksFlow()
         {
             Console.Write("Enter a Task ID (GUID) or part of the Title: ");
@@ -186,7 +158,6 @@ namespace Task_Tracker.Presentation
                 return;
             }
 
-            // If it parses as a GUID, search by ID
             if (Guid.TryParse(input, out var id))
             {
                 var hit = _manager.FindById(id);
@@ -200,7 +171,6 @@ namespace Task_Tracker.Presentation
                 return;
             }
 
-            // Otherwise search by title (case-insensitive)
             var matches = _manager.SearchByTitle(input);
             if (matches.Count == 0)
             {
@@ -222,36 +192,21 @@ namespace Task_Tracker.Presentation
 
             if (sortKey == "due")
             {
-                // For due date, we deliberately use our manual insertion sort
                 var sorted = _manager.SortByDueDateManual(ascending);
-
                 PrintTasks(sorted);
-
-                Console.WriteLine();
-                Console.WriteLine(ascending
-                    ? "(Sorted by due date ascending using custom insertion sort)"
-                    : "(Sorted by due date descending using custom insertion sort)");
                 return;
             }
 
             if (sortKey == "priority")
             {
-                // For priority, we use a normal built-in order (High/Critical first, etc.)
                 var sorted = _manager.SortByPriority(ascending);
-
                 PrintTasks(sorted);
-
-                Console.WriteLine();
-                Console.WriteLine(ascending
-                    ? "(Sorted by priority ascending using built-in ordering)"
-                    : "(Sorted by priority descending using built-in ordering)");
                 return;
             }
 
             Console.WriteLine("I didn't understand that. Try 'due' or 'priority'.");
         }
 
-        // ====== NEW: 5) Show Overdue ======
         private void ShowOverdueFlow()
         {
             var today = DateTime.Now;
@@ -267,33 +222,29 @@ namespace Task_Tracker.Presentation
             PrintTasks(overdue);
         }
 
-        // ====== NEW: 6) Export Overdue CSV ======
-      private void ExportOverdueCsvFlow()
-{
-    Console.Write("Enter file path (leave empty for ./overdue.csv in project folder): ");
-    var path = Console.ReadLine();
+        private void ExportOverdueCsvFlow()
+        {
+            Console.Write("Enter file path (leave empty for ./overdue.csv in project folder): ");
+            var path = Console.ReadLine();
 
-    if (string.IsNullOrWhiteSpace(path))
-    {
-        // this points to the folder where you ran `dotnet run` (your project root)
-        path = System.IO.Path.Combine(Environment.CurrentDirectory, "overdue.csv");
-    }
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                path = Path.Combine(Environment.CurrentDirectory, "overdue.csv");
+            }
 
-    var today = DateTime.Now;
+            var today = DateTime.Now;
 
-    try
-    {
-        _manager.ExportOverdueToCsv(path, today);
-        Console.WriteLine($"Overdue tasks exported to: {path}");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Could not export overdue tasks: {ex.Message}");
-    }
-}
+            try
+            {
+                _manager.ExportOverdueToCsv(path, today);
+                Console.WriteLine($"Overdue tasks exported to: {path}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Could not export overdue tasks: {ex.Message}");
+            }
+        }
 
-
-        // shared printer
         private static void PrintTasks(IEnumerable<TaskItem> items)
         {
             Console.WriteLine();

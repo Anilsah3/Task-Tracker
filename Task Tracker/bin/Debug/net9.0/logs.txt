@@ -1,0 +1,11 @@
+2025-10-31 09:24:03 [INFO] TaskManager started (in-memory).
+2025-10-31 09:28:48 [INFO] Created task a91103ce-21e9-4444-949d-9c939a05fc79 (orange)
+2025-10-31 09:28:51 [INFO] Fetched 1 overdue task(s).
+2025-10-31 09:28:56 [INFO] Fetched 1 overdue task(s).
+2025-10-31 09:28:56 [INFO] Exported 1 overdue task(s) to C:\Users\hp\Desktop\csharp\Task Tracker\bin\Debug\net9.0\overdue.csv
+2025-10-31 09:41:25 [INFO] Data file 'tasks.json' not found. Starting with empty list.
+2025-10-31 09:41:57 [INFO] Created task c92e1771-2f87-4de4-8a83-e23ba25ca900 (apple)
+2025-10-31 09:42:04 [INFO] Fetched 1 overdue task(s).
+2025-10-31 09:42:07 [INFO] Fetched 1 overdue task(s).
+2025-10-31 09:42:07 [INFO] Exported 1 overdue task(s) to C:\Users\hp\Desktop\csharp\Task Tracker\bin\Debug\net9.0\overdue.csv
+2025-10-31 09:42:10 [INFO] Saved 1 task(s) to 'tasks.json'.
