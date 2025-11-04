@@ -13,7 +13,7 @@ namespace Task_Tracker.Tests
             public TestLogger() : base("test-logs.txt") { }
         }
 
-        [Fact]
+
         public void Can_create_task()
         {
             var logger = new TestLogger();
@@ -27,7 +27,7 @@ namespace Task_Tracker.Tests
             Assert.Single(manager.All());
         }
 
-        [Fact]
+    
         public void Can_update_status()
         {
             var logger = new TestLogger();
@@ -41,7 +41,6 @@ namespace Task_Tracker.Tests
             Assert.Equal(TaskStatus.Done, manager.FindById(task.Id)!.Status);
         }
 
-        [Fact]
         public void Search_by_title_returns_matching_tasks()
         {
             var logger = new TestLogger();
@@ -56,7 +55,7 @@ namespace Task_Tracker.Tests
             Assert.Equal(2, result.Count);
         }
 
-        [Fact]
+
         public void Sort_by_due_date_orders_earliest_first()
         {
             var logger = new TestLogger();
@@ -73,7 +72,6 @@ namespace Task_Tracker.Tests
             Assert.Equal("t1", sorted[2].Title);
         }
 
-        [Fact]
         public void Overdue_returns_only_past_and_not_done()
         {
             var logger = new TestLogger();
@@ -90,8 +88,7 @@ namespace Task_Tracker.Tests
             Assert.Equal(o1.Id, overdue[0].Id);
         }
 
-        // extra one to catch the "overdue also returns done" bug
-        [Fact]
+        
         public void Overdue_should_not_return_done_tasks()
         {
             var logger = new TestLogger();
