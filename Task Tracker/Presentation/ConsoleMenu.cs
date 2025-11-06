@@ -260,7 +260,7 @@ namespace Task_Tracker.Presentation
                 return;
             }
 
-            Console.WriteLine("I didn't understand that. Try 'due' or 'priority'.");
+            Console.WriteLine("Error occured'.");
         }
 
         private void ShowOverdueFlow()
@@ -280,7 +280,7 @@ namespace Task_Tracker.Presentation
 
         private void ExportOverdueCsvFlow()
         {
-            Console.Write("Enter file path (leave empty for ./overdue.csv): ");
+            Console.Write("Enter file path: ");
             var path = Console.ReadLine();
 
             if (string.IsNullOrWhiteSpace(path))
