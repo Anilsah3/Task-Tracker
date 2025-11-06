@@ -1,18 +1,15 @@
 
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Task_Tracker.Task;
-using TaskStatus = Task_Tracker.Task.TaskStatus;
+using TaskStatusDomain = Task_Tracker.Task.TaskStatus;
 
 namespace Task_Tracker.Application
 {
-    /// <summary>
-    /// Simple in-memory task manager.
-    /// Now also supports saving/loading tasks.json.
-    /// </summary>
     public class TaskManager
     {
         private readonly List<TaskItem> _tasks = new();
@@ -25,13 +22,12 @@ namespace Task_Tracker.Application
             _dataFile = dataFile;
         }
 
-        // PERSISTENCE 
-
+        // load everything from json file if it exists
         public void LoadFromJson()
         {
             if (!File.Exists(_dataFile))
             {
-                _logger.Info($"Data file '{_dataFile}' not found. Starting with empty list.");
+                _logger.Info($"Data file '{_dataFile}' not found. Starting empty.");
                 return;
             }
 
@@ -40,7 +36,7 @@ namespace Task_Tracker.Application
                 var json = File.ReadAllText(_dataFile);
                 if (string.IsNullOrWhiteSpace(json))
                 {
-                    _logger.Info($"Data file '{_dataFile}' was empty. Starting with empty list.");
+                    _logger.Info($"Data file '{_dataFile}' was empty. Starting empty.");
                     return;
                 }
 
@@ -60,6 +56,7 @@ namespace Task_Tracker.Application
             }
         }
 
+        // save to json so we don't lose work
         public void SaveToJson()
         {
             try
@@ -76,34 +73,39 @@ namespace Task_Tracker.Application
             }
         }
 
-
-        public TaskItem CreateTask(string title, string? desc, DateTime due, Priority prio, string? assignee)
+        // create a new task (assignee & description are required here)
+        public TaskItem CreateTask(string title, string desc, DateTime due, Priority prio, string assignee)
         {
-            if (string.IsNullOrWhiteSpace(title))
-                throw new ArgumentException("Title is required.", nameof(title));
+            // validate inputs
+            InputRules.EnsureTitle(title);
+            InputRules.EnsureDescription(desc);
+            InputRules.EnsureAssignee(assignee);
+            InputRules.EnsureDueDate(due);
+            InputRules.EnsurePriority(prio);
+
+            var now = DateTime.UtcNow;
 
             var task = new TaskItem
             {
-                Title       = title.Trim(),
-                Description = string.IsNullOrWhiteSpace(desc) ? null : desc.Trim(),
-                DueDate     = due,
+                Title       = InputRules.Clean(title),
+                Description = InputRules.Clean(desc),
+                DueDate     = due.Date,
                 Priority    = prio,
-                Assignee    = string.IsNullOrWhiteSpace(assignee) ? null : assignee.Trim(),
-                Status      = TaskStatus.Todo
+                Assignee    = InputRules.Clean(assignee),
+                Status      = TaskStatusDomain.Todo,
+                CreatedAt   = now,
+                UpdatedAt   = now
             };
 
             _tasks.Add(task);
             _logger.Info($"Created task {task.Id} ({task.Title})");
-
             return task;
         }
 
-        public TaskItem? FindById(Guid id)
-        {
-            return _tasks.FirstOrDefault(t => t.Id == id);
-        }
+        public TaskItem? FindById(Guid id) => _tasks.FirstOrDefault(t => t.Id == id);
 
-        public bool UpdateStatus(Guid id, TaskStatus newStatus)
+        // update only the status (with some basic rules)
+        public bool UpdateStatus(Guid id, TaskStatusDomain newStatus)
         {
             var task = FindById(id);
             if (task is null)
@@ -112,23 +114,37 @@ namespace Task_Tracker.Application
                 return false;
             }
 
-            if (task.Status == newStatus)
-                return true;
+            InputRules.EnsureStatus(newStatus);
+
+            // simple rule: can't update an archived task
+            if (task.Status == TaskStatusDomain.Archived)
+                throw new InvalidOperationException("Archived tasks cannot be updated.");
+
+            // optional: only allow Archive if Done
+            if (newStatus == TaskStatusDomain.Archived && task.Status != TaskStatusDomain.Done)
+                throw new InvalidOperationException("Only 'Done' tasks can be archived.");
+
+            if (task.Status == newStatus) return true;
 
             task.Status = newStatus;
+            task.UpdatedAt = DateTime.UtcNow;
             _logger.Info($"Updated task {id} to {newStatus}");
             return true;
         }
 
+        // search by title (needs at least 2 chars)
         public List<TaskItem> SearchByTitle(string term)
         {
-            if (string.IsNullOrWhiteSpace(term))
+            term = (term ?? "").Trim();
+            if (term.Length < 2)
+            {
+                _logger.Warn("Search term too short. Minimum 2 characters.");
                 return new List<TaskItem>();
+            }
 
-            term = term.Trim().ToLowerInvariant();
-
+            var key = term.ToLowerInvariant();
             var results = _tasks
-                .Where(t => (t.Title ?? string.Empty).ToLowerInvariant().Contains(term))
+                .Where(t => (t.Title ?? string.Empty).ToLowerInvariant().Contains(key))
                 .OrderBy(t => t.DueDate)
                 .ToList();
 
@@ -136,6 +152,7 @@ namespace Task_Tracker.Application
             return results;
         }
 
+        // sort by due date using simple insertion sort (as you had)
         public List<TaskItem> SortByDueDateManual(bool ascending = true)
         {
             var list = _tasks.ToList();
@@ -179,8 +196,8 @@ namespace Task_Tracker.Application
             var list = _tasks
                 .Where(t =>
                     t.DueDate.Date < today.Date &&
-                    t.Status != TaskStatus.Done &&
-                    t.Status != TaskStatus.Archived)
+                    t.Status != TaskStatusDomain.Done &&
+                    t.Status != TaskStatusDomain.Archived)
                 .OrderBy(t => t.DueDate)
                 .ToList();
 
@@ -194,9 +211,7 @@ namespace Task_Tracker.Application
 
             var dir = Path.GetDirectoryName(filePath);
             if (!string.IsNullOrWhiteSpace(dir) && !Directory.Exists(dir))
-            {
                 Directory.CreateDirectory(dir);
-            }
 
             using var writer = new StreamWriter(filePath);
             writer.WriteLine("Id,Title,DueDate,Priority,Status,Assignee");
@@ -211,8 +226,7 @@ namespace Task_Tracker.Application
 
         private static string Escape(string? value)
         {
-            if (string.IsNullOrWhiteSpace(value))
-                return string.Empty;
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
             return value.Replace(",", " ");
         }
 
