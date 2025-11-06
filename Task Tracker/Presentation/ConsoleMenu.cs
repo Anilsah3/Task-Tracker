@@ -2,6 +2,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Task_Tracker.Application;
 using Task_Tracker.Task;
 using DomainTaskStatus = Task_Tracker.Task.TaskStatus;
@@ -71,51 +72,86 @@ namespace Task_Tracker.Presentation
             Console.Write("Press Enter to continue...");
             Console.ReadLine();
         }
-  private void SaveAndExit()
+
+        private void SaveAndExit()
         {
-            //  save tasks to JSON before exiting
             _manager.SaveToJson();
             Console.WriteLine("Data saved. Goodbye!");
             _running = false;
         }
-        // Functionality of the add, update,search
+
+        // --------- helpers for user input with validation loops ----------
+
+        private static string ReadNonEmpty(string label, int minLen = 1, int maxLen = int.MaxValue)
+        {
+            while (true)
+            {
+                Console.Write($"{label}: ");
+                var s = (Console.ReadLine() ?? "").Trim();
+                if (s.Length < minLen)
+                {
+                    Console.WriteLine($"Must be at least {minLen} character(s).");
+                    continue;
+                }
+                if (s.Length > maxLen)
+                {
+                    Console.WriteLine($"Must be {maxLen} characters or less.");
+                    continue;
+                }
+                return s;
+            }
+        }
+
+        private static DateTime ReadDueDate()
+        {
+            while (true)
+            {
+                Console.Write("Due date (yyyy-MM-dd): ");
+                var raw = Console.ReadLine();
+                if (!DateTime.TryParse(raw, out var due))
+                {
+                    Console.WriteLine("Invalid date. Use format yyyy-MM-dd.");
+                    continue;
+                }
+                try
+                {
+                    InputRules.EnsureDueDate(due);
+                    return due;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+        }
+
+        private static Priority ReadPriority()
+        {
+            while (true)
+            {
+                Console.Write("Priority (Low, Medium, High, Critical): ");
+                var raw = (Console.ReadLine() ?? "").Trim();
+                if (Enum.TryParse<Priority>(raw, true, out var pr))
+                    return pr;
+
+                Console.WriteLine("Invalid priority. Try: Low, Medium, High, Critical.");
+            }
+        }
+
+        // --------------------- flows -----------------------
 
         private void AddTaskFlow()
         {
-            Console.Write("Title: ");
-            var title = Console.ReadLine() ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(title))
-            {
-                Console.WriteLine("Title is required.");
-                return;
-            }
-
-            Console.Write("Description: ");
-            var desc = Console.ReadLine();
-
-            Console.Write("Due date (yyyy-MM-dd): ");
-            var dueRaw = Console.ReadLine();
-            if (!DateTime.TryParse(dueRaw, out var due))
-            {
-                Console.WriteLine("Invalid date. Use format yyyy-MM-dd.");
-                return;
-            }
-
-            Console.Write("Priority (Low, Medium, High, Critical): ");
-            var prRaw = Console.ReadLine();
-            if (!Enum.TryParse<Priority>(prRaw, true, out var prio))
-            {
-                Console.WriteLine("Invalid priority. Defaulting to Medium.");
-                prio = Priority.Medium;
-            }
-
-            Console.Write("Assignee: ");
-            var asg = Console.ReadLine();
+            var title    = ReadNonEmpty("Title", minLen: 3, maxLen: 80);
+            var desc     = ReadNonEmpty("Description", minLen: 5, maxLen: 5000);
+            var due      = ReadDueDate();
+            var priority = ReadPriority();
+            var assignee = ReadNonEmpty("Assignee", minLen: 2, maxLen: 50);
 
             try
             {
-                var task = _manager.CreateTask(title, desc, due, prio, asg);
-                Console.WriteLine($"✅ Task created. ID: {task.Id}");
+                var task = _manager.CreateTask(title, desc, due, priority, assignee);
+                Console.WriteLine($" Task created. ID: {task.Id}");
             }
             catch (Exception ex)
             {
@@ -134,17 +170,31 @@ namespace Task_Tracker.Presentation
                 return;
             }
 
+            var task = _manager.FindById(id);
+            if (task is null)
+            {
+                Console.WriteLine("No task found with that ID.");
+                return;
+            }
+
             Console.Write("New status (Todo, InProgress, Done, Archived): ");
             var statusRaw = Console.ReadLine();
 
             if (!Enum.TryParse<DomainTaskStatus>(statusRaw, true, out var newStatus))
             {
-                Console.WriteLine("Unknown status. Try: Todo, InProgress, Done, or Archived.");
+                Console.WriteLine("Unknown status. Try: Todo, InProgress, Done, Archived.");
                 return;
             }
 
-            var ok = _manager.UpdateStatus(id, newStatus);
-            Console.WriteLine(ok ? "Status updated." : "No task found with that ID.");
+            try
+            {
+                var ok = _manager.UpdateStatus(id, newStatus);
+                Console.WriteLine(ok ? "Status updated." : "Could not update status.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Update failed: {ex.Message}");
+            }
         }
 
         private void SearchTasksFlow()
@@ -168,6 +218,12 @@ namespace Task_Tracker.Presentation
                 }
 
                 PrintTasks(new[] { hit });
+                return;
+            }
+
+            if (input.Length < 2)
+            {
+                Console.WriteLine("Please enter at least 2 characters for title search.");
                 return;
             }
 
@@ -214,7 +270,7 @@ namespace Task_Tracker.Presentation
 
             if (overdue.Count == 0)
             {
-                Console.WriteLine("No overdue tasks ✅");
+                Console.WriteLine("No overdue tasks");
                 return;
             }
 
@@ -224,13 +280,11 @@ namespace Task_Tracker.Presentation
 
         private void ExportOverdueCsvFlow()
         {
-            Console.Write("Enter file path (leave empty for ./overdue.csv in project folder): ");
+            Console.Write("Enter file path (leave empty for ./overdue.csv): ");
             var path = Console.ReadLine();
 
             if (string.IsNullOrWhiteSpace(path))
-            {
                 path = Path.Combine(Environment.CurrentDirectory, "overdue.csv");
-            }
 
             var today = DateTime.Now;
 
@@ -257,7 +311,7 @@ namespace Task_Tracker.Presentation
                 if (title.Length > 20) title = title[..20];
 
                 var due = t.DueDate.ToString("yyyy-MM-dd");
-                var assignee = string.IsNullOrWhiteSpace(t.Assignee) ? "-" : t.Assignee!;
+                var assignee = string.IsNullOrWhiteSpace(t.Assignee) ? "-" : t.Assignee;
 
                 Console.WriteLine($"{t.Id} | {title} | {due} | {t.Priority,-8} | {t.Status,-10} | {assignee}");
             }
