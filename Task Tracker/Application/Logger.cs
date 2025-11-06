@@ -1,41 +1,23 @@
 
+#nullable enable
 using System;
 
 namespace Task_Tracker.Application
 {
-    /// <summary>
-    /// Very small file logger. Appends lines to a txt file.
-    /// If writing fails, we just ignore it so the app doesn't crash.
-    /// </summary>
     public class Logger
     {
-        private readonly string _filePath;
-        private readonly object _lock = new();
+        private static string Now() => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
-        public Logger(string filePath)
+        public void Info(string msg)  => Log("INFO",  msg, ConsoleColor.Gray);
+        public void Warn(string msg)  => Log("WARN",  msg, ConsoleColor.Yellow);
+        public void Error(string msg) => Log("ERROR", msg, ConsoleColor.Red);
+
+        private void Log(string level, string msg, ConsoleColor color)
         {
-            _filePath = filePath;
-        }
-
-        public void Info(string message)  => Write("INFO", message);
-        public void Warn(string message)  => Write("WARN", message);
-        public void Error(string message) => Write("ERROR", message);
-
-        private void Write(string level, string message)
-        {
-            var line = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [{level}] {message}";
-
-            try
-            {
-                lock (_lock)
-                {
-                    File.AppendAllLines(_filePath, new[] { line });
-                }
-            }
-            catch
-            {
-                // don't crash the program because of logging
-            }
+            var old = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.WriteLine($"[{Now()}] [{level}] {msg}");
+            Console.ForegroundColor = old;
         }
     }
 }
