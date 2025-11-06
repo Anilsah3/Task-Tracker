@@ -2,7 +2,6 @@
 #nullable enable
 using System;
 using Task_Tracker.Task;
-// add an alias to avoid clash with System.Threading.Tasks.TaskStatus
 using DomainTaskStatus = Task_Tracker.Task.TaskStatus;
 
 namespace Task_Tracker.Application
