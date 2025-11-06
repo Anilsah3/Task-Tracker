@@ -1,21 +1,22 @@
-﻿
+
+#nullable enable
 using Task_Tracker.Application;
 using Task_Tracker.Presentation;
 
 namespace Task_Tracker
 {
-    internal class Program
+    internal static class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            var logger = new Logger("logs.txt");
-            var manager = new TaskManager(logger, "tasks.json");
-
-            //  load saved tasks (if file exists)
+            var logger = new Logger();
+            var manager = new TaskManager(logger, dataFile: "tasks.json");
             manager.LoadFromJson();
+            var reports = new object();
 
-            var menu = new ConsoleMenu(manager, new object());
+            var menu = new ConsoleMenu(manager, reports);
             menu.Run();
+            manager.SaveToJson();
         }
     }
 }
