@@ -36,7 +36,6 @@ namespace Task_Tracker.Application
         public static void EnsureDueDate(DateTime due)
         {
     
-            if (due.Date < DateTime.Today) throw new ArgumentException("Due date cannot be in the past.");
         }
 
         public static void EnsurePriority(Priority p)
