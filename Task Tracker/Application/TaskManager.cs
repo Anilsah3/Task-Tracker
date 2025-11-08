@@ -16,13 +16,14 @@ namespace Task_Tracker.Application
         private readonly Logger _logger;
         private readonly string _dataFile;
 
+        // Change the default to "task.json" if you prefer singular
         public TaskManager(Logger logger, string dataFile = "tasks.json")
         {
             _logger = logger;
             _dataFile = dataFile;
         }
 
-        // load everything from json file if it exists
+
         public void LoadFromJson()
         {
             if (!File.Exists(_dataFile))
@@ -56,7 +57,7 @@ namespace Task_Tracker.Application
             }
         }
 
-        // save to json so we don't lose work
+        
         public void SaveToJson()
         {
             try
@@ -99,6 +100,8 @@ namespace Task_Tracker.Application
 
             _tasks.Add(task);
             _logger.Info($"Created task {task.Id} ({task.Title})");
+            SaveToJson();
+
             return task;
         }
 
@@ -129,6 +132,10 @@ namespace Task_Tracker.Application
             task.Status = newStatus;
             task.UpdatedAt = DateTime.UtcNow;
             _logger.Info($"Updated task {id} to {newStatus}");
+
+            // Persist immediately on status change as well
+            SaveToJson();
+
             return true;
         }
 
