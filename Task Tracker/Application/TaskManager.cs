@@ -14,8 +14,6 @@ namespace Task_Tracker.Application
         private readonly List<TaskItem> _tasks = new();
         private readonly Logger _logger;
         private readonly string _dataFile;
-
-        // Change default to "task.json" if you prefer singular
         public TaskManager(Logger logger, string dataFile = "tasks.json")
         {
             _logger = logger;
@@ -45,7 +43,6 @@ namespace Task_Tracker.Application
 
                 if (loaded != null)
                 {
-                    // Backfill StartDate for legacy records that didn't have it
                     foreach (var t in loaded)
                     {
                         if (t.StartDate == default)
