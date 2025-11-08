@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Task_Tracker.Task;
-using TaskStatusDomain = Task_Tracker.Task.TaskStatus;
 
 namespace Task_Tracker.Application
 {
@@ -16,14 +15,14 @@ namespace Task_Tracker.Application
         private readonly Logger _logger;
         private readonly string _dataFile;
 
-        // Change the default to "task.json" if you prefer singular
+        // Change default to "task.json" if you prefer singular
         public TaskManager(Logger logger, string dataFile = "tasks.json")
         {
             _logger = logger;
             _dataFile = dataFile;
         }
 
-
+        // load everything from json file if it exists
         public void LoadFromJson()
         {
             if (!File.Exists(_dataFile))
@@ -46,6 +45,17 @@ namespace Task_Tracker.Application
 
                 if (loaded != null)
                 {
+                    // Backfill StartDate for legacy records that didn't have it
+                    foreach (var t in loaded)
+                    {
+                        if (t.StartDate == default)
+                        {
+                            // Prefer CreatedAt if present; else use DueDate or today
+                            t.StartDate = (t.CreatedAt != default ? t.CreatedAt.Date
+                                          : (t.DueDate != default ? t.DueDate.Date : DateTime.Today));
+                        }
+                    }
+
                     _tasks.Clear();
                     _tasks.AddRange(loaded);
                     _logger.Info($"Loaded {_tasks.Count} task(s) from '{_dataFile}'.");
@@ -57,7 +67,7 @@ namespace Task_Tracker.Application
             }
         }
 
-        
+        // save to json so we don't lose work
         public void SaveToJson()
         {
             try
@@ -74,15 +84,18 @@ namespace Task_Tracker.Application
             }
         }
 
-        // create a new task (assignee & description are required here)
-        public TaskItem CreateTask(string title, string desc, DateTime due, Priority prio, string assignee)
+        // === CREATE TASK ===
+        public TaskItem CreateTask(string title, string desc, DateTime startDate, DateTime due, Priority prio, string assignee)
         {
-            // validate inputs
             InputRules.EnsureTitle(title);
             InputRules.EnsureDescription(desc);
             InputRules.EnsureAssignee(assignee);
             InputRules.EnsureDueDate(due);
             InputRules.EnsurePriority(prio);
+
+            // Only logical check: start should not be after due (does not block past)
+            if (startDate.Date > due.Date)
+                throw new ArgumentException("Start date cannot be after due date.");
 
             var now = DateTime.UtcNow;
 
@@ -90,54 +103,28 @@ namespace Task_Tracker.Application
             {
                 Title       = InputRules.Clean(title),
                 Description = InputRules.Clean(desc),
+                StartDate   = startDate.Date,
                 DueDate     = due.Date,
                 Priority    = prio,
                 Assignee    = InputRules.Clean(assignee),
-                Status      = TaskStatusDomain.Todo,
                 CreatedAt   = now,
                 UpdatedAt   = now
             };
 
             _tasks.Add(task);
             _logger.Info($"Created task {task.Id} ({task.Title})");
+
+            // Auto-save immediately after creation
             SaveToJson();
 
             return task;
         }
 
+        // Backward-compatible overload (old callsites without startDate)
+        public TaskItem CreateTask(string title, string desc, DateTime due, Priority prio, string assignee)
+            => CreateTask(title, desc, DateTime.Today, due, prio, assignee);
+
         public TaskItem? FindById(Guid id) => _tasks.FirstOrDefault(t => t.Id == id);
-
-        // update only the status (with some basic rules)
-        public bool UpdateStatus(Guid id, TaskStatusDomain newStatus)
-        {
-            var task = FindById(id);
-            if (task is null)
-            {
-                _logger.Warn($"Tried to update task {id} but it was not found.");
-                return false;
-            }
-
-            InputRules.EnsureStatus(newStatus);
-
-            // simple rule: can't update an archived task
-            if (task.Status == TaskStatusDomain.Archived)
-                throw new InvalidOperationException("Archived tasks cannot be updated.");
-
-            // optional: only allow Archive if Done
-            if (newStatus == TaskStatusDomain.Archived && task.Status != TaskStatusDomain.Done)
-                throw new InvalidOperationException("Only 'Done' tasks can be archived.");
-
-            if (task.Status == newStatus) return true;
-
-            task.Status = newStatus;
-            task.UpdatedAt = DateTime.UtcNow;
-            _logger.Info($"Updated task {id} to {newStatus}");
-
-            // Persist immediately on status change as well
-            SaveToJson();
-
-            return true;
-        }
 
         // search by title (needs at least 2 chars)
         public List<TaskItem> SearchByTitle(string term)
@@ -159,7 +146,6 @@ namespace Task_Tracker.Application
             return results;
         }
 
-        // sort by due date using simple insertion sort (as you had)
         public List<TaskItem> SortByDueDateManual(bool ascending = true)
         {
             var list = _tasks.ToList();
@@ -201,14 +187,24 @@ namespace Task_Tracker.Application
         public List<TaskItem> GetOverdue(DateTime today)
         {
             var list = _tasks
-                .Where(t =>
-                    t.DueDate.Date < today.Date &&
-                    t.Status != TaskStatusDomain.Done &&
-                    t.Status != TaskStatusDomain.Archived)
+                .Where(t => t.DueDate.Date < today.Date)
                 .OrderBy(t => t.DueDate)
                 .ToList();
 
             _logger.Info($"Fetched {list.Count} overdue task(s).");
+            return list;
+        }
+
+        // Optional: tasks due within N days (inclusive)
+        public List<TaskItem> GetDueWithin(DateTime today, int days)
+        {
+            var end = today.Date.AddDays(days);
+            var list = _tasks
+                .Where(t => t.DueDate.Date >= today.Date && t.DueDate.Date <= end)
+                .OrderBy(t => t.DueDate)
+                .ToList();
+
+            _logger.Info($"Fetched {list.Count} task(s) due within {days} day(s).");
             return list;
         }
 
@@ -221,11 +217,12 @@ namespace Task_Tracker.Application
                 Directory.CreateDirectory(dir);
 
             using var writer = new StreamWriter(filePath);
-            writer.WriteLine("Id,Title,DueDate,Priority,Status,Assignee");
+            writer.WriteLine("Id,Title,StartDate,DueDate,DaysLeft,Priority,Assignee");
 
             foreach (var t in overdue)
             {
-                writer.WriteLine($"{t.Id},{Escape(t.Title)},{t.DueDate:yyyy-MM-dd},{t.Priority},{t.Status},{Escape(t.Assignee)}");
+                var daysLeft = (int)Math.Floor((t.DueDate.Date - today.Date).TotalDays);
+                writer.WriteLine($"{t.Id},{Escape(t.Title)},{t.StartDate:yyyy-MM-dd},{t.DueDate:yyyy-MM-dd},{daysLeft},{t.Priority},{Escape(t.Assignee)}");
             }
 
             _logger.Info($"Exported {overdue.Count} overdue task(s) to {filePath}");
