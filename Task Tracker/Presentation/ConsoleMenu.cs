@@ -1,4 +1,3 @@
-
 #nullable enable
 using System;
 using System.Collections.Generic;
@@ -142,6 +141,9 @@ namespace Task_Tracker.Presentation
 
         private void AddTaskFlow()
         {
+            Console.WriteLine();
+            Console.WriteLine("=== Add a New Task ===");
+
             var title    = ReadNonEmpty("Title", minLen: 3, maxLen: 80);
             var desc     = ReadNonEmpty("Description", minLen: 5, maxLen: 5000);
             var due      = ReadDueDate();
@@ -151,12 +153,30 @@ namespace Task_Tracker.Presentation
             try
             {
                 var task = _manager.CreateTask(title, desc, due, priority, assignee);
-                Console.WriteLine($" Task created. ID: {task.Id}");
+
+                // Show full details immediately (and it's already saved to JSON by TaskManager)
+                Console.WriteLine();
+                Console.WriteLine("Task created and saved:");
+                Console.WriteLine(new string('-', 50));
+                Console.WriteLine($"ID       : {task.Id}");
+                Console.WriteLine($"Title    : {task.Title}");
+                Console.WriteLine($"Desc     : {TrimForLine(task.Description, 80)}");
+                Console.WriteLine($"Due Date : {task.DueDate:yyyy-MM-dd}");
+                Console.WriteLine($"Priority : {task.Priority}");
+                Console.WriteLine($"Status   : {task.Status}");
+                Console.WriteLine($"Assignee : {task.Assignee}");
+                Console.WriteLine(new string('-', 50));
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Failed to create task: {ex.Message}");
             }
+        }
+
+        private static string TrimForLine(string? s, int max)
+        {
+            s ??= "";
+            return s.Length <= max ? s : s.Substring(0, max - 3) + "...";
         }
 
         private void UpdateStatusFlow()
@@ -189,7 +209,7 @@ namespace Task_Tracker.Presentation
             try
             {
                 var ok = _manager.UpdateStatus(id, newStatus);
-                Console.WriteLine(ok ? "Status updated." : "Could not update status.");
+                Console.WriteLine(ok ? "Status updated and saved." : "Could not update status.");
             }
             catch (Exception ex)
             {
