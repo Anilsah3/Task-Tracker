@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using Task_Tracker.Application;
 using Task_Tracker.Task;
-using DomainTaskStatus = Task_Tracker.Task.TaskStatus;
 
 namespace Task_Tracker.Presentation
 {
@@ -34,11 +33,10 @@ namespace Task_Tracker.Presentation
                     switch (choice)
                     {
                         case "1": AddTaskFlow(); break;
-                        case "2": UpdateStatusFlow(); break;
-                        case "3": SearchTasksFlow(); break;
-                        case "4": ListSortedFlow(); break;
-                        case "5": ShowOverdueFlow(); break;
-                        case "6": ExportOverdueCsvFlow(); break;
+                        case "2": SearchTasksFlow(); break;
+                        case "3": ListSortedFlow(); break;
+                        case "4": ShowOverdueFlow(); break;
+                        case "5": ExportOverdueCsvFlow(); break;
                         case "0": SaveAndExit(); continue;
                         default:  Console.WriteLine("Invalid option. Please try again."); break;
                     }
@@ -56,11 +54,10 @@ namespace Task_Tracker.Presentation
         {
             Console.WriteLine("=== Task Tracker ===");
             Console.WriteLine("1) Add Task");
-            Console.WriteLine("2) Update Task Status");
-            Console.WriteLine("3) Search Tasks");
-            Console.WriteLine("4) List Tasks (Sort by due/priority)");
-            Console.WriteLine("5) Show Overdue");
-            Console.WriteLine("6) Export Overdue CSV");
+            Console.WriteLine("2) Search Tasks");
+            Console.WriteLine("3) List Tasks (Sort by due/priority)");
+            Console.WriteLine("4) Show Overdue");
+            Console.WriteLine("5) Export Overdue CSV");
             Console.WriteLine("0) Save & Exit");
             Console.WriteLine();
         }
@@ -101,26 +98,22 @@ namespace Task_Tracker.Presentation
             }
         }
 
-        private static DateTime ReadDueDate()
+        private static DateTime ReadDate(string label, bool allowEmpty = false, DateTime? defaultValue = null)
         {
             while (true)
             {
-                Console.Write("Due date (yyyy-MM-dd): ");
+                Console.Write($"{label}{(allowEmpty ? " (Enter for default)" : "")}: ");
                 var raw = Console.ReadLine();
-                if (!DateTime.TryParse(raw, out var due))
+
+                if (allowEmpty && string.IsNullOrWhiteSpace(raw))
+                    return (defaultValue ?? DateTime.Today).Date;
+
+                if (!DateTime.TryParse(raw, out var dt))
                 {
                     Console.WriteLine("Invalid date. Use format yyyy-MM-dd.");
                     continue;
                 }
-                try
-                {
-                    InputRules.EnsureDueDate(due);
-                    return due;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
+                return dt.Date;
             }
         }
 
@@ -144,28 +137,29 @@ namespace Task_Tracker.Presentation
             Console.WriteLine();
             Console.WriteLine("=== Add a New Task ===");
 
-            var title    = ReadNonEmpty("Title", minLen: 3, maxLen: 80);
-            var desc     = ReadNonEmpty("Description", minLen: 5, maxLen: 5000);
-            var due      = ReadDueDate();
-            var priority = ReadPriority();
-            var assignee = ReadNonEmpty("Assignee", minLen: 2, maxLen: 50);
+            var title     = ReadNonEmpty("Title", minLen: 3, maxLen: 80);
+            var desc      = ReadNonEmpty("Description", minLen: 5, maxLen: 5000);
+            var start     = ReadDate("Start date (yyyy-MM-dd)", allowEmpty: true, defaultValue: DateTime.Today);
+            var due       = ReadDate("Due date (yyyy-MM-dd)");
+            var priority  = ReadPriority();
+            var assignee  = ReadNonEmpty("Assignee", minLen: 2, maxLen: 50);
 
             try
             {
-                var task = _manager.CreateTask(title, desc, due, priority, assignee);
+                var task = _manager.CreateTask(title, desc, start, due, priority, assignee);
 
-                // Show full details immediately (and it's already saved to JSON by TaskManager)
                 Console.WriteLine();
                 Console.WriteLine("Task created and saved:");
-                Console.WriteLine(new string('-', 50));
-                Console.WriteLine($"ID       : {task.Id}");
-                Console.WriteLine($"Title    : {task.Title}");
-                Console.WriteLine($"Desc     : {TrimForLine(task.Description, 80)}");
-                Console.WriteLine($"Due Date : {task.DueDate:yyyy-MM-dd}");
-                Console.WriteLine($"Priority : {task.Priority}");
-                Console.WriteLine($"Status   : {task.Status}");
-                Console.WriteLine($"Assignee : {task.Assignee}");
-                Console.WriteLine(new string('-', 50));
+                Console.WriteLine(new string('-', 60));
+                Console.WriteLine($"ID        : {task.Id}");
+                Console.WriteLine($"Title     : {task.Title}");
+                Console.WriteLine($"Desc      : {TrimForLine(task.Description, 80)}");
+                Console.WriteLine($"StartDate : {task.StartDate:yyyy-MM-dd}");
+                Console.WriteLine($"DueDate   : {task.DueDate:yyyy-MM-dd}");
+                Console.WriteLine($"Days Left : {DaysLeft(task.DueDate)}");
+                Console.WriteLine($"Priority  : {task.Priority}");
+                Console.WriteLine($"Assignee  : {task.Assignee}");
+                Console.WriteLine(new string('-', 60));
             }
             catch (Exception ex)
             {
@@ -179,43 +173,8 @@ namespace Task_Tracker.Presentation
             return s.Length <= max ? s : s.Substring(0, max - 3) + "...";
         }
 
-        private void UpdateStatusFlow()
-        {
-            Console.Write("Task ID: ");
-            var idRaw = Console.ReadLine();
-
-            if (!Guid.TryParse(idRaw, out var id))
-            {
-                Console.WriteLine("That doesn’t look like a valid ID.");
-                return;
-            }
-
-            var task = _manager.FindById(id);
-            if (task is null)
-            {
-                Console.WriteLine("No task found with that ID.");
-                return;
-            }
-
-            Console.Write("New status (Todo, InProgress, Done, Archived): ");
-            var statusRaw = Console.ReadLine();
-
-            if (!Enum.TryParse<DomainTaskStatus>(statusRaw, true, out var newStatus))
-            {
-                Console.WriteLine("Unknown status. Try: Todo, InProgress, Done, Archived.");
-                return;
-            }
-
-            try
-            {
-                var ok = _manager.UpdateStatus(id, newStatus);
-                Console.WriteLine(ok ? "Status updated and saved." : "Could not update status.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Update failed: {ex.Message}");
-            }
-        }
+        private static int DaysLeft(DateTime due) =>
+            (int)Math.Floor((due.Date - DateTime.Today).TotalDays);
 
         private void SearchTasksFlow()
         {
@@ -280,12 +239,12 @@ namespace Task_Tracker.Presentation
                 return;
             }
 
-            Console.WriteLine("Error occured'.");
+            Console.WriteLine("Unknown sort key.");
         }
 
         private void ShowOverdueFlow()
         {
-            var today = DateTime.Now;
+            var today = DateTime.Today;
             var overdue = _manager.GetOverdue(today);
 
             if (overdue.Count == 0)
@@ -306,7 +265,7 @@ namespace Task_Tracker.Presentation
             if (string.IsNullOrWhiteSpace(path))
                 path = Path.Combine(Environment.CurrentDirectory, "overdue.csv");
 
-            var today = DateTime.Now;
+            var today = DateTime.Today;
 
             try
             {
@@ -318,22 +277,23 @@ namespace Task_Tracker.Presentation
                 Console.WriteLine($"Could not export overdue tasks: {ex.Message}");
             }
         }
-
         private static void PrintTasks(IEnumerable<TaskItem> items)
         {
             Console.WriteLine();
-            Console.WriteLine("Id                                   | Title                | Due        | Priority | Status      | Assignee");
-            Console.WriteLine(new string('-', 100));
+            Console.WriteLine("Id                                   | Title                | Start      | Due        | DLeft | Priority | Assignee");
+            Console.WriteLine(new string('-', 120));
 
             foreach (var t in items)
             {
                 var title = (t.Title ?? "").PadRight(20);
                 if (title.Length > 20) title = title[..20];
 
-                var due = t.DueDate.ToString("yyyy-MM-dd");
+                var start = t.StartDate.ToString("yyyy-MM-dd");
+                var due   = t.DueDate.ToString("yyyy-MM-dd");
+                var dleft = DaysLeft(t.DueDate).ToString().PadLeft(5);
                 var assignee = string.IsNullOrWhiteSpace(t.Assignee) ? "-" : t.Assignee;
 
-                Console.WriteLine($"{t.Id} | {title} | {due} | {t.Priority,-8} | {t.Status,-10} | {assignee}");
+                Console.WriteLine($"{t.Id} | {title} | {start} | {due} | {dleft} | {t.Priority,-8} | {assignee}");
             }
         }
     }
