@@ -120,7 +120,6 @@ namespace Task_Tracker.Application
             return task;
         }
 
-        // Backward-compatible overload (old callsites without startDate)
         public TaskItem CreateTask(string title, string desc, DateTime due, Priority prio, string assignee)
             => CreateTask(title, desc, DateTime.Today, due, prio, assignee);
 
@@ -195,7 +194,6 @@ namespace Task_Tracker.Application
             return list;
         }
 
-        // Optional: tasks due within N days (inclusive)
         public List<TaskItem> GetDueWithin(DateTime today, int days)
         {
             var end = today.Date.AddDays(days);
